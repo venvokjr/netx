@@ -1,0 +1,104 @@
+from managers.xray_manager import XrayManager
+from managers import config_manager, service_manager
+from models.xray_users import VmessUser, VlessUser, TrojanUser
+from datetime import datetime,timedelta
+import os, psutil
+
+CONFIG_DIR = "/usr/local/etc/xray/config.json"
+BACKUP_DIR = "/opt/netx/backups"
+configManager = config_manager.ConfigManager(CONFIG_DIR,BACKUP_DIR)
+serviceManager = service_manager.ServiceManager()
+xray_manager = XrayManager(configManager,serviceManager)
+
+def clear():
+    os.system('cls') if os.name == 'nt' else os.system('clear')
+
+def printf(key:str, value:str):
+    print(f"{key:<22} : {value}")
+
+def get_uptime(total_seconds:timedelta):
+    total_seconds = int(total_seconds.total_seconds())
+    days, remainder = divmod(total_seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    return f"{days} days, {hours} hours, {minutes} mins, {seconds} secs"
+
+def banner():
+    with open("/etc/os-release") as f:
+        info = {}
+        for line in f:
+            if "=" in line:
+                k, v = line.rstrip().split("=", 1)
+                info[k] = v.strip('"')
+
+    ram = psutil.virtual_memory()
+
+    print("="*50)
+    print(f"{'OS':<22} : {info['PRETTY_NAME']}")
+    print(f"{'Kernel':<22} : {os.uname().release}")
+    print(f"{'Hostname':<22} : {os.uname().nodename}")
+    print(f"{'CPU Cores':<22} : {os.cpu_count()}")
+    print(f"{'RAM':<22} : {ram.used // 1024**2} MB / {ram.total // 1024**2} MB")
+    print(f"{'DATE':<22} : {datetime.now().strftime("%a, %d %b %Y %H:%M:%S")}")
+    print(f"{'UPTIME':<22} : { get_uptime(datetime.now() - datetime.fromtimestamp(psutil.boot_time())) }")
+    print("="*50)
+
+def ssh_menu():
+    print(f"{'THIS IS SSH MENU':>27}")
+
+def collect_user_input():
+    username = input("Enter username: ").strip()
+    expiry = int(input("Enter duration(in days): ").strip())
+
+
+    return username, expiry
+
+def xray_menu():
+    try:
+        clear()
+        print("="*50)
+        print(f"{'THIS IS XRAY MENU':>27}")
+        print("="*50)
+        print("1. Add VMESS account")
+        print("2. Add VLESS account")
+        print("3. Add TROJAN account")
+        choice = input("Select option: ")
+
+        if choice == "1":
+            username, expiry = collect_user_input()
+            user = VmessUser(username, expiry)
+            xray_manager.add_vmess_user(user)
+        
+        elif choice == "2":
+            username, expiry = collect_user_input()
+            user = VlessUser(username, expiry)
+            xray_manager.add_vless_user(user)
+        
+        elif choice == "3":
+            username, expiry = collect_user_input()
+            user = TrojanUser(username, expiry)
+            xray_manager.add_trojan_user()
+    except Exception as e:
+        print(e)
+
+def script_menu():
+    print(f"{'NETX MENU':>27}")
+    print("="*50)
+
+    print(f"{'[1•] SSH MENU':<20} {'[2•] XRAY MENU'}")
+
+    choice = input("Select menu: ")
+
+    if choice == "1":
+        ssh_menu()
+    elif choice == "2":
+        xray_menu()
+ 
+
+def main():
+    clear()
+    banner()
+    script_menu()
+
+main()
