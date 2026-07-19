@@ -25,9 +25,8 @@ def configure_stunnel_configuration():
         """
 
         generate_stunnel_pem(configs['domain'])
-        configManager.save(CONFIGURATION.strip(), create_backup=False, is_json=False)
+        save_config(CONFIGURATION, config)
         serviceManager.restart('stunnel4')
-        serviceManager.daemon_reload()
 
         result = serviceManager.status('stunnel4')
         if result.returncode == 0:
@@ -40,6 +39,10 @@ def configure_stunnel_configuration():
     except Exception as e:
         print(e)
         sys.exit(1)
+
+def save_config(data, path):
+    with open(path, 'w') as f:
+        f.write(data)
 
 def generate_stunnel_pem(domain: str):
     letsencrypt_dir = Path(f"/etc/letsencrypt/live/{domain}")
