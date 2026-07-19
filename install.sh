@@ -111,8 +111,8 @@ install_dropbear(){
         if ! systemctl is-active --quiet dropbear; then
             error "Dropbear is not active trying to configure by changing ports"
             
-            chmod +x opt/net/configure_dropbear.py
-            if ! sudo python3 opt/net/configure_dropbear.py; then
+            chmod +x /opt/netx/configure_dropbear.py
+            if ! sudo python3 /opt/netx/configure_dropbear.py; then
                 error "Failed to configure dropbear"
                 exit 1
 
@@ -244,8 +244,8 @@ get_domain() {
         NETX_DOMAIN="$vps_domain"
         NETX_VPS_IP="$vps_ip"
 
-        chmod +x opt/net/set_config.py
-        python3 opt/net/set_config.py --domain $vps_domain
+        chmod +x /opt/netx/set_config.py
+        python3 /opt/netx/set_config.py --domain $vps_domain
 
         success "Domain resolved successfully."
         break
@@ -333,8 +333,8 @@ create_nginx_config() {
         exit 1
     fi
 
-    chmod +x opt/net/configure_nginx.py
-    if ! sudo python3 opt/net/configure_nginx.py; then
+    chmod +x /opt/netx/configure_nginx.py
+    if ! sudo python3 /opt/netx/configure_nginx.py; then
         error "Failed to initialize nginx configuration"
         exit 1
     fi
@@ -398,8 +398,8 @@ restart_xray() {
 
 configure_websocket_proxy(){
     info "Starting the webscokets proxy"
-    chmod +x opt/net/configure_ws_proxy.py
-    if ! sudo opt/net/configure_ws_proxy.py; then
+    chmod +x /opt/netx/configure_ws_proxy.py
+    if ! sudo /opt/netx/configure_ws_proxy.py; then
         error "Failed to start websocket proxy"
         exit 1
     else
@@ -414,8 +414,8 @@ install_stunnel(){
         exit 1
 
     else
-        chmod +x opt/net/configure_stunnel.py
-        if ! sudo python3 opt/net/configure_stunnel.py; then
+        chmod +x /opt/netx/configure_stunnel.py
+        if ! sudo python3 /opt/netx/configure_stunnel.py; then
             error 'Failed to configure stunnel4'
             exit 1
         
