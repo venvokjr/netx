@@ -67,7 +67,7 @@ def set_new_dropbear_port( lines: list, port:str ):
     new_config = ""
     for line in lines:
         if line.startswith("#DROPBEAR_PORT="):
-            new_config += f"#DROPBEAR_PORT={port}\n"
+            new_config += f"DROPBEAR_PORT={port}\n"
         else:
             new_config += f"{line}\n"
     
