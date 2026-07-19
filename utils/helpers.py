@@ -1,11 +1,13 @@
 import json, os, sys, subprocess
 
+CONFIG_PATH = "/opt/netx/configs/env.json"
+
 class Helpers:
 
     @staticmethod
     def load_app_config():
         try:
-            with open("configs/env.json", "r") as f:
+            with open(CONFIG_PATH, "r") as f:
                 return json.load(f)
         except FileNotFoundError as e:
             print("App config is not found")
@@ -14,7 +16,7 @@ class Helpers:
     @staticmethod
     def modify_app_config(config: dict):
         try:
-            with open("configs/env.json", "w") as f:
+            with open(CONFIG_PATH, "w") as f:
                 json.dump(config, f, indent=4)
 
         except FileNotFoundError as e:
