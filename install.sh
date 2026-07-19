@@ -102,12 +102,13 @@ install_dropbear(){
     else
         info "Dropbear not found, trying to install it"
 
+        sudo apt update
         if ! sudo apt install -y dropbear; then
             error "Failed to install dropbear"
             exit 1
         fi
 
-        if ! systemctl status is-active dropbear; then
+        if ! systemctl is-active --quiet dropbear; then
             error "Dropbear is not active trying to configure by changing ports"
             
             chmod +x configure_dropbear.py
