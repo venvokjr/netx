@@ -1,4 +1,4 @@
-import sys,time
+import sys,time, subprocess
 from utils import helpers
 from managers import config_manager, service_manager
 
@@ -30,9 +30,15 @@ def configure_new_dropbear_port():
         new_config = set_new_dropbear_port(dropbear_config.split('\n'), new_port)
         change_dropbear_config(configManager, new_config, dropbear_config_path)
 
-        serviceManager = service_manager.ServiceManager()
-        serviceManager.restart('dropbear')
         time.sleep(5)
+
+        subprocess.run(
+            ["systemctl", "status", "dropbear"],
+            text=True,
+            capture_output=True
+        )
+
+        time.sleep(3)
         
         # result = serviceManager.status('dropbear')
         # if result.returncode == 0:

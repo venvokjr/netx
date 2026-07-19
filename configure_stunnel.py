@@ -16,13 +16,12 @@ def configure_stunnel_configuration():
 
 
         CONFIGURATION = f"""
+        cert = /etc/stunnel/stunnel.pem
         [ssh]
 
         accept = 443
 
         connect = 127.0.0.1:{dropbear_port}
-
-        cert = /etc/stunnel/stunnel.pem
         """
 
         generate_stunnel_pem(configs['domain'])
