@@ -181,6 +181,9 @@ install_netx(){
 
         install_netx_requirements
 
+        chmod +x /opt/netx/set_config.py
+        python3 /opt/netx/set_config.py --domain $NETX_DOMAIN
+
         success "Netx was downloaded successfully"
     fi
 
@@ -243,9 +246,6 @@ get_domain() {
 
         NETX_DOMAIN="$vps_domain"
         NETX_VPS_IP="$vps_ip"
-
-        chmod +x /opt/netx/set_config.py
-        python3 /opt/netx/set_config.py --domain $vps_domain
 
         success "Domain resolved successfully."
         break

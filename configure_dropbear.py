@@ -68,8 +68,10 @@ def set_new_dropbear_port( lines: list, port:str ):
     for line in lines:
         if line.startswith("#DROPBEAR_PORT="):
             new_config += f"DROPBEAR_PORT={port}\n"
+        elif 'DROPBEAR_EXTRA_ARGS="-b /etc/issue.net"' in line:
+            new_config += 'DROPBEAR_EXTRA_ARGS="-b /etc/issue.net"\n'
         else:
-            new_config += f"{line}\n"
+            new_config += f"{line}\n"     
     
     return new_config.strip()
 
