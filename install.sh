@@ -466,8 +466,8 @@ main(){
     check_root
     check_os
     update_packages
-    get_domain
     install_dependencies
+    get_domain
     install_netx
     install_xray
     create_temp_nginx_config
