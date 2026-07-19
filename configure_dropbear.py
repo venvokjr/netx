@@ -39,10 +39,11 @@ def configure_new_dropbear_port():
             modify_dropbear_port_in_configs(new_port)
             sys.exit(0)
         
-        print("Failed to configure SSH Dropbear, reversing the old config")
-        change_dropbear_config(configManager, dropbear_config, dropbear_config_path)
-        serviceManager.restart('dropbear')
-        sys.exit(1)
+        else:
+            print("Failed to configure SSH Dropbear, reversing the old config")
+            change_dropbear_config(configManager, dropbear_config, dropbear_config_path)
+            serviceManager.restart('dropbear')
+            sys.exit(1)
 
 
     except Exception as e:
