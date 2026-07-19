@@ -93,12 +93,45 @@ install_xray(){
 
 }
 
+install_dropbear(){
+    info "Checking Dropbear installation"
+
+    if command -v dropbear >/dev/null 2>&1; then
+        success "Dropbear found, skipping its installation"
+    
+    else
+        info "Dropbear not found, trying to install it"
+
+        if ! sudo apt install -y dropbear; then
+            error "Failed to install dropbear"
+            exit 1
+        fi
+
+        if ! systemctl status is-active dropbear; then
+            error "Dropbear is not active trying to configure by changing ports"
+            
+            chmod +x configure_dropbear.py
+            if ! sudo python3 configure_dropbear.py; then
+                error "Failed to configure dropbear"
+                exit 1
+
+            else
+                success "Dropbear configuration is successfully"
+            fi
+
+        else
+            success "Dropbear configured and installed  successfully"
+        fi
+    
+    fi
+
+}
 
 install_netx_requirements() {
     if [[ -f /opt/netx/requirements.txt ]]; then
         info "Installing Python dependencies..."
 
-        if ! python3 -m pip install -r /opt/netx/requirements.txt; then
+        if ! python3 -m pip install --break-system-packages -r /opt/netx/requirements.txt; then
             error "Failed to install Python dependencies."
             exit 1
         fi
@@ -158,7 +191,7 @@ create_netx_executable() {
 
     cat > /usr/local/bin/netx << 'EOF'
 #!/bin/bash
-python3 /opt/netx/main.py "$@"
+sudo python3 /opt/netx/main.py "$@"
 EOF
 
     chmod +x /usr/local/bin/netx
@@ -172,6 +205,7 @@ EOF
 }
 
 get_domain() {
+    clear
     while true; do
         read -rp "Enter the domain/subdomain pointed to this VPS IP: " domain
 
@@ -208,6 +242,9 @@ get_domain() {
 
         NETX_DOMAIN="$vps_domain"
         NETX_VPS_IP="$vps_ip"
+
+        chmod +x set_config.py
+        python3 set_config.py --domain $vps_domain
 
         success "Domain resolved successfully."
         break
@@ -295,12 +332,9 @@ create_nginx_config() {
         exit 1
     fi
 
-    if ! sed -i \
-        -e "s|__DOMAIN__|$NETX_DOMAIN|g" \
-        -e "s|__VLESS_PORT__|$VLESS_PORT|g" \
-        -e "s|__VMESS_PORT__|$VMESS_PORT|g" \
-        /etc/nginx/sites-available/netx; then
-        error "Failed to configure Nginx."
+    chmod +x configure_nginx.py
+    if ! sudo python3 configure_nginx.py; then
+        error "Failed to initialize nginx configuration"
         exit 1
     fi
 
@@ -321,15 +355,15 @@ create_nginx_config() {
 create_xray_config() {
     info "Creating Xray configuration..."
 
-    if ! cp /opt/netx/configs/xray-config.json /tmp/netx-xray.json; then
+    if ! cp /opt/netx/configs/config.json /tmp/netx-xray.json; then
         error "Failed to copy Xray configuration."
         exit 1
     fi
 
-    if ! replace_placeholders /tmp/netx-xray.json; then
-        error "Failed to configure Xray."
-        exit 1
-    fi
+    # if ! replace_placeholders /tmp/netx-xray.json; then
+    #     error "Failed to configure Xray."
+    #     exit 1
+    # fi
 
     if ! xray run -test -config /tmp/netx-xray.json; then
         error "Xray configuration validation failed."
@@ -359,6 +393,36 @@ restart_xray() {
     fi
 
     success "Xray restarted successfully."
+}
+
+configure_websocket_proxy(){
+    info "Starting the webscokets proxy"
+    chmod +x configure_ws_proxy.py
+    if ! sudo configure_ws_proxy.py; then
+        error "Failed to start websocket proxy"
+        exit 1
+    else
+        success "Websocket proxy started successfully"
+    fi
+}
+
+install_stunnel(){
+
+    if ! sudo apt install -y stunnel4; then
+        error 'Failed to install stunnel4'
+        exit 1
+
+    else
+        chmod +x configure_stunnel.py
+        if ! sudo python3 configure_stunnel.py; then
+            error 'Failed to configure stunnel4'
+            exit 1
+        
+        else
+            success "Stunnel was installed and configured properly"
+        fi
+
+    fi
 }
 
 create_netx_config() {
@@ -402,14 +466,18 @@ main(){
     check_root
     check_os
     update_packages
+    get_domain
     install_dependencies
     install_xray
     install_netx
-    get_domain
     create_temp_nginx_config
     reload_nginx
     install_certbot
     issue_certificate
+    install_dropbear
+    install_stunnel
+    configure_websocket_proxy
+    create_xray_config
     create_nginx_config
     reload_nginx
     restart_xray

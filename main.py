@@ -1,14 +1,28 @@
 from managers.xray_manager import XrayManager
 from managers import config_manager, service_manager
 from models.xray_users import VmessUser, VlessUser, TrojanUser
+from utils import helpers
 from datetime import datetime,timedelta
-import os, psutil
+from utils import helpers
+import os, psutil, traceback,json
 
-CONFIG_DIR = "/usr/local/etc/xray/config.json"
-BACKUP_DIR = "/opt/netx/backups"
-configManager = config_manager.ConfigManager(CONFIG_DIR,BACKUP_DIR)
-serviceManager = service_manager.ServiceManager()
-xray_manager = XrayManager(configManager,serviceManager)
+
+CONFIG_MANAGER = ""
+SERVICE_MANAGER = ""
+XRAY_MANAGER = ""
+DOMAIN = ""
+
+def initialize():
+    configs = helpers.Helpers.load_app_config()
+    
+    xray_config_path = configs['xray_config']
+    backup_dir = configs['backup_dir']
+
+    global CONFIG_MANAGER, SERVICE_MANAGER, XRAY_MANAGER, DOMAIN
+    DOMAIN = configs['domain']
+    CONFIG_MANAGER = config_manager.ConfigManager(xray_config_path, backup_dir)
+    SERVICE_MANAGER = service_manager.ServiceManager()
+    XRAY_MANAGER = XrayManager(CONFIG_MANAGER, SERVICE_MANAGER)
 
 def clear():
     os.system('cls') if os.name == 'nt' else os.system('clear')
@@ -37,6 +51,7 @@ def banner():
     print("="*50)
     print(f"{'OS':<22} : {info['PRETTY_NAME']}")
     print(f"{'Kernel':<22} : {os.uname().release}")
+    print(f"{'Domain':<22} : {DOMAIN}")
     print(f"{'Hostname':<22} : {os.uname().nodename}")
     print(f"{'CPU Cores':<22} : {os.cpu_count()}")
     print(f"{'RAM':<22} : {ram.used // 1024**2} MB / {ram.total // 1024**2} MB")
@@ -68,19 +83,19 @@ def xray_menu():
         if choice == "1":
             username, expiry = collect_user_input()
             user = VmessUser(username, expiry)
-            xray_manager.add_vmess_user(user)
+            XRAY_MANAGER.add_vmess_user(user)
         
         elif choice == "2":
             username, expiry = collect_user_input()
             user = VlessUser(username, expiry)
-            xray_manager.add_vless_user(user)
+            XRAY_MANAGER.add_vless_user(user)
         
         elif choice == "3":
             username, expiry = collect_user_input()
             user = TrojanUser(username, expiry)
-            xray_manager.add_trojan_user()
-    except Exception as e:
-        print(e)
+            XRAY_MANAGER.add_trojan_user()
+    except Exception:
+        traceback.print_exc()
 
 def script_menu():
     print(f"{'NETX MENU':>27}")
@@ -101,4 +116,6 @@ def main():
     banner()
     script_menu()
 
-main()
+if __name__ == "__main__":
+    initialize()
+    main()

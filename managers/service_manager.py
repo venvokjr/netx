@@ -2,6 +2,27 @@ import subprocess,pathlib
 
 class ServiceManager:
 
+    def start(self, service_name):
+        return subprocess.run(
+            ["systemctl","start",service_name],
+            text=True,
+            capture_output=True
+        )
+
+    def enable(self, service_name):
+        return subprocess.run(
+            ["systemctl","enable",service_name],
+            text=True,
+            capture_output=True
+        )
+
+    def daemon_reload(self):
+        return subprocess.run(
+            ["systemctl","daemon", "reload"],
+            text=True,
+            capture_output=True
+        )
+
     def restart(self, service_name):
         return subprocess.run(
             ["systemctl","restart",service_name],

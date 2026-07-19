@@ -8,23 +8,26 @@ class ConfigManager:
         self.config_path = config_path
         self.backup_directory = backup_directory
     
-    def load(self, loading_path=None):
+    def load(self, loading_path=None, is_json=True):
         loading_file = self.config_path if not loading_path else loading_path
 
         if(not pathlib.Path(loading_file).exists()):
             raise FileNotFoundError("Config file is not found")
 
         with open(loading_file, 'r') as f:
-            return json.load(f)
+            return json.load(f) if is_json else f.read()
     
-    def save(self, updated_config, saving_path=None, create_backup=True):
+    def save(self, updated_config, saving_path=None, create_backup=True, is_json=True):
         if create_backup:
             self.create_backup()
         
         saving_file = self.config_path if not saving_path else saving_path
 
         with open(saving_file, 'w') as f:
-            json.dump(updated_config, f, indent=4)
+            if is_json:
+                json.dump(updated_config, f, indent=4)
+            else:
+                f.write(updated_config)
     
     def create_backup(self):
         config = self.load()
