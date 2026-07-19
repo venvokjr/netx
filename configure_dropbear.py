@@ -1,4 +1,4 @@
-import sys
+import sys,time
 from utils import helpers
 from managers import config_manager, service_manager
 
@@ -32,7 +32,8 @@ def configure_new_dropbear_port():
 
         serviceManager = service_manager.ServiceManager()
         serviceManager.restart('dropbear')
-
+        time.sleep(5)
+        
         result = serviceManager.status('dropbear')
         if result.returncode == 0:
             print(f"Dropbear is configured properly and working")
