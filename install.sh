@@ -468,8 +468,8 @@ main(){
     update_packages
     get_domain
     install_dependencies
-    install_xray
     install_netx
+    install_xray
     create_temp_nginx_config
     reload_nginx
     install_certbot
