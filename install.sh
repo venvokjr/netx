@@ -399,7 +399,7 @@ restart_xray() {
 configure_websocket_proxy(){
     info "Starting the webscokets proxy"
     chmod +x /opt/netx/configure_ws_proxy.py
-    if ! sudo /opt/netx/configure_ws_proxy.py; then
+    if ! sudo python3 /opt/netx/configure_ws_proxy.py; then
         error "Failed to start websocket proxy"
         exit 1
     else
@@ -409,20 +409,25 @@ configure_websocket_proxy(){
 
 install_stunnel(){
 
-    if ! sudo apt install -y stunnel4; then
-        error 'Failed to install stunnel4'
-        exit 1
+    if command -v stunnel4 >/dev/null 2>&1; then
+        success "Stunnel already available, skipping its installation"
 
     else
-        chmod +x /opt/netx/configure_stunnel.py
-        if ! sudo python3 /opt/netx/configure_stunnel.py; then
-            error 'Failed to configure stunnel4'
+        if ! sudo apt install -y stunnel4; then
+            error 'Failed to install stunnel4'
             exit 1
-        
-        else
-            success "Stunnel was installed and configured properly"
-        fi
 
+        else
+            chmod +x /opt/netx/configure_stunnel.py
+            if ! sudo python3 /opt/netx/configure_stunnel.py; then
+                error 'Failed to configure stunnel4'
+                exit 1
+            
+            else
+                success "Stunnel was installed and configured properly"
+            fi
+
+        fi
     fi
 }
 
