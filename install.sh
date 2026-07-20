@@ -117,12 +117,12 @@ install_dropbear(){
                 exit 1
 
             else
-                sudo systemctl restart ws_proxy
+                sudo systemctl restart dropbear
                 success "Dropbear configuration is successfully"
             fi
 
         else
-            sudo systemctl restart ws_proxy
+            sudo systemctl restart dropbear
             success "Dropbear configured and installed  successfully"
         fi
     
