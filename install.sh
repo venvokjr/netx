@@ -117,10 +117,12 @@ install_dropbear(){
                 exit 1
 
             else
+                sudo systemctl restart ws_proxy
                 success "Dropbear configuration is successfully"
             fi
 
         else
+            sudo systemctl restart ws_proxy
             success "Dropbear configured and installed  successfully"
         fi
     
@@ -403,6 +405,7 @@ configure_websocket_proxy(){
         error "Failed to start websocket proxy"
         exit 1
     else
+        sudo systemctl restart ws_proxy
         success "Websocket proxy started successfully"
     fi
 }
@@ -481,7 +484,7 @@ main(){
     install_certbot
     issue_certificate
     install_dropbear
-    install_stunnel
+    # install_stunnel
     configure_websocket_proxy
     create_xray_config
     create_nginx_config
