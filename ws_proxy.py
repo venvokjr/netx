@@ -5,76 +5,100 @@ MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 
 def main():
-    configs = Helpers.load_app_config() 
-    ws_proxy_port = configs['wsproxy_port']
-    dropbear_port = configs['dropbear_port']
+    configs = Helpers.load_app_config()
 
-    server =  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(('127.0.0.1',int(ws_proxy_port)))
-    server.listen()
+    ws_proxy_port = int(configs["wsproxy_port"])
+    dropbear_port = int(configs["dropbear_port"])
 
-    print("Waiting for incoming connetions")
-    client, address = server.accept()
-    headers = client.recv(4096).decode().split("\r\n")
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind(("127.0.0.1", ws_proxy_port))
+    server.listen(128)
 
-    sec_websocket_key = extract_header_value(extract_header(headers, "Sec-WebSocket-Key"))
+    print(f"WebSocket Proxy listening on 127.0.0.1:{ws_proxy_port}")
 
-    if not sec_websocket_key:
-        client.close()
-        return
-    
-    accept_key = generate_accept_key(sec_websocket_key)
-
-    response = (
-        "HTTP/1.1 101 Switching Protocols\r\n"
-        "Upgrade: websocket\r\n"
-        "Connection: Upgrade\r\n"
-        f"Sec-WebSocket-Accept: {accept_key}\r\n"
-        "\r\n"
-    )
-
-    client.sendall(response.encode())
-
-    print("Websocket connected")
-
-    dropbear = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    dropbear.connect(('127.0.0.1', int(dropbear_port)))
-
-    
     while True:
-        readable, _, _ = select.select([client, dropbear], [], [])
+        client = None
+        dropbear = None
 
-        for sock in readable:
+        try:
+            client, address = server.accept()
+            print(f"Incoming connection: {address}")
 
-            if sock == client:
+            headers = client.recv(4096).decode(errors="ignore").split("\r\n")
 
-                payload = receive_frame(client)
+            sec_websocket_key = extract_header_value(
+                extract_header(headers, "Sec-WebSocket-Key")
+            )
 
-                if payload is None:
-                    client.close()
-                    dropbear.close()
-                    return
+            if not sec_websocket_key:
+                client.close()
+                continue
 
-                if not payload:
-                    return
+            accept_key = generate_accept_key(sec_websocket_key)
 
+            response = (
+                "HTTP/1.1 101 Switching Protocols\r\n"
+                "Upgrade: websocket\r\n"
+                "Connection: Upgrade\r\n"
+                f"Sec-WebSocket-Accept: {accept_key}\r\n"
+                "\r\n"
+            )
+
+            client.sendall(response.encode())
+
+            print("WebSocket connected")
+
+            dropbear = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            dropbear.connect(("127.0.0.1", dropbear_port))
+
+            while True:
+
+                readable, _, _ = select.select(
+                    [client, dropbear],
+                    [],
+                    []
+                )
+
+                for sock in readable:
+
+                    if sock == client:
+
+                        payload = receive_frame(client)
+
+                        if payload is None:
+                            raise ConnectionError("Client disconnected")
+
+                        # Ignore Ping/Pong frames
+                        if payload == b"":
+                            continue
+
+                        dropbear.sendall(payload)
+
+                    elif sock == dropbear:
+
+                        payload = dropbear.recv(4096)
+
+                        if not payload:
+                            raise ConnectionError("Dropbear disconnected")
+
+                        send_frame(client, payload)
+
+        except Exception as e:
+            print(f"Connection closed: {e}")
+
+        finally:
+            if client:
                 try:
-                    dropbear.sendall(payload)
-                except OSError:
                     client.close()
+                except:
+                    pass
+
+            if dropbear:
+                try:
                     dropbear.close()
-                    return
-
-            elif sock == dropbear:
-
-                payload = dropbear.recv(4096)
-
-                if not payload:
-                    return
-
-                send_frame(client, payload)
-
-
+                except:
+                    pass
 
 def generate_accept_key(client_key:str):
     client_key +=  MAGIC_STRING

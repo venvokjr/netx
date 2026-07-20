@@ -470,6 +470,7 @@ finish() {
     echo "Launch NET-X using:"
     echo "    netx"
     echo
+    systemctl restart dropbear
 }
 
 main(){
