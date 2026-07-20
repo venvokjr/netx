@@ -288,6 +288,7 @@ reload_nginx() {
     fi
 
     systemctl reload nginx
+    systemctl reload nginx
 
     if [[ $? -ne 0 ]]; then
         error "Failed to reload Nginx."
