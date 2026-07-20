@@ -29,16 +29,15 @@ def configure_new_dropbear_port():
 
         new_config = set_new_dropbear_port(dropbear_config.split('\n'), new_port)
         change_dropbear_config(configManager, new_config, dropbear_config_path)
+        modify_dropbear_port_in_configs(new_port)
 
         time.sleep(5)
 
         subprocess.run(
-            ["systemctl", "status", "dropbear"],
+            ["systemctl", "restart", "dropbear"],
             text=True,
             capture_output=True
         )
-
-        time.sleep(3)
         
         # result = serviceManager.status('dropbear')
         # if result.returncode == 0:

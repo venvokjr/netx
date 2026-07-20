@@ -8,10 +8,9 @@ def configure_stunnel_configuration():
     try:
         configs = helpers.Helpers.load_app_config()
         
-        dropbear_port = configs['dropbear_port']
+        stunnel_port = configs['stunnel_port']
         config = configs['stunnel_config']
 
-        configManager = config_manager.ConfigManager(config, configs['backup_dir'])
         serviceManager = service_manager.ServiceManager()
 
 
@@ -21,7 +20,7 @@ def configure_stunnel_configuration():
 
         accept = 443
 
-        connect = 127.0.0.1:{dropbear_port}
+        connect = 127.0.0.1:{stunnel_port}
         """
 
         generate_stunnel_pem(configs['domain'])

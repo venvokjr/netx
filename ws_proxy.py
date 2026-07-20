@@ -1,11 +1,16 @@
 import socket, hashlib, base64, select
+from utils.helpers import Helpers
 
 MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 
 def main():
+    configs = Helpers.load_app_config() 
+    ws_proxy_port = configs['wsproxy_port']
+    dropbear_port = configs['dropbear_port']
+
     server =  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(('127.0.0.1',8080))
+    server.bind(('127.0.0.1',int(ws_proxy_port)))
     server.listen()
 
     print("Waiting for incoming connetions")
@@ -33,7 +38,7 @@ def main():
     print("Websocket connected")
 
     dropbear = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    dropbear.connect(('127.0.0.1',22))
+    dropbear.connect(('127.0.0.1', int(dropbear_port)))
 
     
     while True:
